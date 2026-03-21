@@ -24,4 +24,3 @@ __pycache__/
 *.log
 /media/
 
-/srpc_new/settings.py
