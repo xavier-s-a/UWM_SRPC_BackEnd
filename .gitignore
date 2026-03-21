@@ -1,0 +1,27 @@
+#ignore the virtual environment directory(depnds on name)
+/venv/
+
+*.pyc
+*.pyo
+__pycache__/
+**/__pycache__/
+
+**/__pycache__/*.pyc
+
+**/migrations/__pycache__/
+
+!**/migrations/*.py
+
+.DS_Store
+
+*.sqlite3
+
+.env
+*.code-workspace
+*.vscode/
+.idea/
+
+*.log
+/media/
+
+/srpc_new/settings.py
