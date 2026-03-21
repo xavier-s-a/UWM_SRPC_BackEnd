@@ -64,3 +64,4 @@ django-import-export==3.2.0
 XlsxWriter==3.2.3
 python-dotenv==1.2.2
 boto3==1.28.57
+setuptools<82
