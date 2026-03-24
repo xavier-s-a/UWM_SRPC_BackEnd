@@ -3,7 +3,7 @@ import requests
 
 from datetime import date,datetime
 
-EVENT_DATETIME = datetime(2026, 4, 16, 11, 0) # 11:00 AM CST on April 16, 2026
+EVENT_DATETIME = datetime(2026, 4, 25, 11, 0) # 11:00 AM CST on April 25, 2026
 if datetime.now() >= EVENT_DATETIME:
     print("Student ingestion is disabled after the event starts.")
     exit()
