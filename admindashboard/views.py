@@ -57,7 +57,7 @@ def sorted_scores_view(request):
 
     if category == "3mt":
         data = (
-            model.objects.values('student__Name', 'student__poster_ID')
+            model.objects.values('student__Name', 'student__poster_ID','student__department')
             .annotate(
                 avg_score=Round(
                     Avg('comprehension_content') + Avg('engagement') + Avg('communication') + Avg('overall_impression'),
@@ -71,7 +71,7 @@ def sorted_scores_view(request):
     elif category == "exp":
         data = (
             ExpLearning.objects
-            .values("student__Name", "student__poster_ID")
+            .values("student__Name", "student__poster_ID", "student__department")
             .annotate(
                 avg_reflection=Avg("reflection_score"),
                 avg_communication=Avg("communication_score"),
@@ -92,7 +92,7 @@ def sorted_scores_view(request):
 
     elif category == "respost":
         data = (
-            model.objects.values('Student__Name', 'Student__poster_ID')
+            model.objects.values('Student__Name', 'Student__poster_ID','Student__department')
             .annotate(
                 avg_score=Round(
                     Avg('research_score') + Avg('communication_score') + Avg('presentation_score'),
@@ -213,7 +213,7 @@ def student_judge_status(request):
 
     students = list(
         Students.objects.filter(poster_ID__gte=lo, poster_ID__lte=hi)
-        .values("poster_ID", "Name")
+        .values("poster_ID", "Name","department", "dashboard_color")
         .order_by("poster_ID")
     )
 
@@ -244,12 +244,24 @@ def student_judge_status(request):
     result = []
     for s in students:
         pid = s["poster_ID"]
+        manual_color = s.get("dashboard_color")
+        scored_count = int(m.get(pid, 0))
+        if manual_color:
+            status_color = manual_color
+        elif scored_count == 0:
+            status_color = "red"
+        elif scored_count in [1, 2]:
+            status_color = "yellow"
+        else:
+            status_color = "green"
         result.append({
             "student": s["Name"],
             "poster_id": pid,
             "scored": int(m.get(pid, 0)),
             "total": required,
             "category": category,
+            "department": s.get("department") or "-",
+            "status_color": status_color,
         })
 
     return Response(result)
@@ -413,7 +425,6 @@ CATEGORY_RANGES = {
     "exp": (301, 399),
     "3mt": (401, 499),
 }
-
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsDashboardUser])
@@ -424,34 +435,68 @@ def judge_poster_status(request):
         return Response({"error": "Invalid category"}, status=400)
 
     lo, hi = rng
-    total_posters = Students.objects.filter(poster_ID__gte=lo, poster_ID__lte=hi).count()
+    total_posters = Students.objects.filter(
+        poster_ID__gte=lo,
+        poster_ID__lte=hi
+    ).count()
+
+    judges = User.objects.exclude(email__isnull=True).exclude(email__exact="").order_by("first_name", "email")
 
     result = []
-    for judge in User.objects.all():
+    for judge in judges:
         if category == "respost":
-            ids = (Scores_Round_1.objects
-                   .filter(judge=judge, Student__poster_ID__gte=lo, Student__poster_ID__lte=hi)
-                   .values_list("Student__poster_ID", flat=True)
-                   .distinct())
+            scored = list(
+                Scores_Round_1.objects
+                .filter(judge=judge, Student__poster_ID__gte=lo, Student__poster_ID__lte=hi)
+                .values(
+                    poster_num=F("Student__poster_ID"),
+                    student_name=F("Student__Name"),
+                    department=F("Student__department"),
+                    poster_title=F("Student__poster_title"),
+                )
+                .distinct()
+            )
         elif category == "exp":
-            ids = (ExpLearning.objects
-                   .filter(judge=judge, student__poster_ID__gte=lo, student__poster_ID__lte=hi)
-                   .values_list("student__poster_ID", flat=True)
-                   .distinct())
-        else:  # 3mt
-            ids = (ThreeMt.objects
-                   .filter(judge=judge, student__poster_ID__gte=lo, student__poster_ID__lte=hi)
-                   .values_list("student__poster_ID", flat=True)
-                   .distinct())
+            scored = list(
+                ExpLearning.objects
+                .filter(judge=judge, student__poster_ID__gte=lo, student__poster_ID__lte=hi)
+                .values(
+                    poster_num=F("student__poster_ID"),
+                    student_name=F("student__Name"),
+                    department=F("student__department"),
+                    poster_title=F("student__poster_title"),
+                )
+                .distinct()
+            )
+        else:
+            scored = list(
+                ThreeMt.objects
+                .filter(judge=judge, student__poster_ID__gte=lo, student__poster_ID__lte=hi)
+                .values(
+                    poster_num=F("student__poster_ID"),
+                    student_name=F("student__Name"),
+                    department=F("student__department"),
+                    poster_title=F("student__poster_title"),
+                )
+                .distinct()
+            )
 
-        ids_list = list(ids)
+        posts = [
+            {
+                "poster_id": row["poster_num"],
+                "student_name": row["student_name"],
+                "department": row["department"],
+                "poster_title": row["poster_title"],
+            }
+            for row in scored
+        ]
+
         result.append({
-            "judge_first_name": judge.first_name,
-            "judge_email": judge.email,
-            "posters_scored": ids_list,
-            "posters_scored_count": len(ids_list),
+            "judge_first_name": judge.first_name or "",
+            "judge_email": judge.email or "",
+            "posters_scored": posts,
+            "posters_scored_count": len(posts),
             "total_posters": total_posters,
         })
 
     return Response(result)
-

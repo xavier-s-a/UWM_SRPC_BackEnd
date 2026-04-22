@@ -133,7 +133,8 @@ class UpdateThreeMtAPIView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class ComputeAndStoreThreeMTAggregatesAPIView(APIView):
     def post(self, request):
         try:

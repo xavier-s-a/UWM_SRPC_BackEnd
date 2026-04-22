@@ -19,7 +19,8 @@ def _token_for_user(user):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def dashboard_signin(request):
-    email = request.data.get("email")
+    #email = request.data.get("email")
+    email = request.data.get("email", "").strip().lower()
     password = request.data.get("password")
 
     if not email or not password:

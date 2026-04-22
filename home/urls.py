@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import HomeAPIView, populate_round_1_table, validate_token, StudentJudgeCountAPIView, StudentCreateAPIView
+from .views import HomeAPIView, JudgePosterQueueAPIView, StudentColorUpdateAPIView, populate_round_1_table, validate_token, StudentJudgeCountAPIView, StudentCreateAPIView
 
 app_name = 'home'
 
@@ -12,4 +12,6 @@ urlpatterns = [
     path('validate_token/', validate_token.as_view(), name='validate_token'),
     path('show-judge-count/', StudentJudgeCountAPIView.as_view(), name='show-judge-count'),
     path('students/create/', StudentCreateAPIView.as_view(), name='create-student'),
+    path("students/<int:poster_id>/color/", StudentColorUpdateAPIView.as_view(), name="student-color-update"),
+    path("judge-poster-queue/", JudgePosterQueueAPIView.as_view(), name="judge-poster-queue"),
 ] 

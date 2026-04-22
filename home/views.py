@@ -108,7 +108,8 @@ class validate_token(APIView):
         return Response(status=status.HTTP_200_OK)
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class populate_round_1_table(APIView):
     def get(self, request):
 
@@ -159,7 +160,10 @@ class populate_round_1_table(APIView):
             total_score.judged_count = score['judges_count']
             total_score.save()
 
-        return HttpResponseRedirect(reverse('admin:index'))
+        return Response(
+    {"message": "Research poster aggregated scores stored successfully."},
+    status=status.HTTP_200_OK
+)
     
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------from rest_framework import serializers
 
@@ -172,3 +176,161 @@ class StudentCreateAPIView(APIView):
             serializer.save()
             return Response({"message": "Student added successfully."}, status=status.HTTP_201_CREATED)
         return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+#-----new code fo0r condtionfor status color in admin dashboard--------------------------
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class StudentColorUpdateAPIView(APIView):
+    def patch(self, request, poster_id):
+        try:
+            student = Students.objects.get(poster_ID=poster_id)
+        except Students.DoesNotExist:
+            return Response({"error": "Student not found"}, status=404)
+
+        color = request.data.get("dashboard_color")
+        allowed = {"red", "yellow", "green", "", None}
+
+        if color not in allowed:
+            return Response({"error": "Invalid color"}, status=400)
+
+        student.dashboard_color = color or None
+        student.save(update_fields=["dashboard_color"])
+
+        return Response({
+            "message": "Student color updated successfully",
+            "poster_id": student.poster_ID,
+            "dashboard_color": student.dashboard_color,
+        }, status=200)
+        
+        
+        
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class JudgePosterQueueAPIView(APIView):
+    def get(self, request):
+        category = request.GET.get("category")
+        department = request.GET.get("department")
+
+        ranges = {
+            "respost": (101, 299),
+            "exp": (301, 399),
+            "3mt": (401, 499),
+        }
+
+        if category not in ranges:
+            return Response({"error": "Invalid category"}, status=400)
+
+        lo, hi = ranges[category]
+
+        students = Students.objects.filter(poster_ID__gte=lo, poster_ID__lte=hi)
+
+        if department:
+            students = students.filter(department__iexact=department)
+
+        if category == "respost":
+            scored_ids = set(
+                Scores_Round_1.objects
+                .filter(judge=request.user, Student__poster_ID__gte=lo, Student__poster_ID__lte=hi)
+                .values_list("Student__poster_ID", flat=True)
+            )
+        elif category == "exp":
+            scored_ids = set(
+                ExpLearning.objects
+                .filter(judge=request.user, student__poster_ID__gte=lo, student__poster_ID__lte=hi)
+                .values_list("student__poster_ID", flat=True)
+            )
+        else:
+            scored_ids = set(
+                ThreeMt.objects
+                .filter(judge=request.user, student__poster_ID__gte=lo, student__poster_ID__lte=hi)
+                .values_list("student__poster_ID", flat=True)
+            )
+
+        not_scored = []
+        already_scored = []
+
+        for s in students.order_by("poster_ID"):
+            item = {
+                "poster_id": s.poster_ID,
+                "student_name": s.Name,
+                "department": s.department or "-",
+                "poster_title": s.poster_title or "-",
+            }
+            if s.poster_ID in scored_ids:
+                already_scored.append(item)
+            else:
+                not_scored.append(item)
+
+        return Response({
+            "not_scored_by_current_judge": not_scored,
+            "scored_by_current_judge": already_scored,
+        })
+        
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class JudgePosterQueueAPIView(APIView):
+    def get(self, request):
+        category = request.GET.get("category")
+        department = request.GET.get("department")
+
+        ranges = {
+            "respost": (101, 299),
+            "exp": (301, 399),
+            "3mt": (401, 499),
+        }
+
+        if category not in ranges:
+            return Response({"error": "Invalid category"}, status=400)
+
+        lo, hi = ranges[category]
+
+        students = Students.objects.filter(poster_ID__gte=lo, poster_ID__lte=hi)
+
+        if department:
+            students = students.filter(department__iexact=department)
+
+        if category == "respost":
+            scored_ids = set(
+                Scores_Round_1.objects.filter(
+                    judge=request.user,
+                    Student__poster_ID__gte=lo,
+                    Student__poster_ID__lte=hi,
+                ).values_list("Student__poster_ID", flat=True)
+            )
+        elif category == "exp":
+            scored_ids = set(
+                ExpLearning.objects.filter(
+                    judge=request.user,
+                    student__poster_ID__gte=lo,
+                    student__poster_ID__lte=hi,
+                ).values_list("student__poster_ID", flat=True)
+            )
+        else:
+            scored_ids = set(
+                ThreeMt.objects.filter(
+                    judge=request.user,
+                    student__poster_ID__gte=lo,
+                    student__poster_ID__lte=hi,
+                ).values_list("student__poster_ID", flat=True)
+            )
+
+        not_scored = []
+        already_scored = []
+
+        for s in students.order_by("poster_ID"):
+            item = {
+                "poster_id": s.poster_ID,
+                "student_name": s.Name,
+                "department": s.department or "-",
+                "poster_title": s.poster_title or "-",
+            }
+            if s.poster_ID in scored_ids:
+                already_scored.append(item)
+            else:
+                not_scored.append(item)
+
+        return Response({
+            "not_scored_by_current_judge": not_scored,
+            "scored_by_current_judge": already_scored,
+        })

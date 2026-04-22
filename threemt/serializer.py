@@ -19,11 +19,11 @@ class ThreeMtSerializer(serializers.ModelSerializer):
 class UpdateThreeMtSerializer(serializers.ModelSerializer):
     judge = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)  # Accept only user ID
     poster_id = serializers.IntegerField(read_only=True)  # Explicitly define poster_ID as primary key
-
+    student_department = serializers.CharField(source='student.department', read_only=True)
     class Meta:
         model = ThreeMt
         fields = ['poster_id', 'judge', 'comprehension_content', 'engagement', 
-                  'communication', 'overall_impression', 'feedback']
+                  'communication', 'overall_impression', 'feedback', 'student_department']
 
     def update(self, instance, validated_data):
         # Handle judge field separately if it's being updated

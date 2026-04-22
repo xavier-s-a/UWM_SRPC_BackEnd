@@ -21,11 +21,12 @@ class Scores_Round_Serializer(serializers.ModelSerializer):
     judge = serializers.ReadOnlyField(source='judge.first_name')
     total_score = serializers.SerializerMethodField()
     feedback = serializers.CharField()
-
+    student_department = serializers.ReadOnlyField(source='Student.department')
+    poster_title = serializers.ReadOnlyField(source='Student.poster_title')
     class Meta:
         model = Scores_Round_1
         fields = ['id', 'judge', 'Student', 'student_name', 'poster_id',
-                  'research_score', 'communication_score', 'presentation_score', 'total_score', 'feedback']
+                  'research_score', 'communication_score', 'presentation_score', 'total_score', 'feedback', 'student_department', 'poster_title']
 
     def get_total_score(self, obj):
         return obj.research_score + obj.communication_score + obj.presentation_score

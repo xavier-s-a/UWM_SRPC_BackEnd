@@ -26,7 +26,7 @@ class Students(models.Model):
     email = models.EmailField(null=True, blank=True)
     scored_By_Judges = models.IntegerField(null=True, blank=True)
     finalist = models.BooleanField(default=False)
-
+    dashboard_color = models.CharField(max_length=20, null=True, blank=True)
     def judged_count_round_1(self):
         return Scores_Round_1.objects.filter(Student=self).count()
 

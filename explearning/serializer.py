@@ -32,9 +32,9 @@ class ExpLearningSerializer(serializers.ModelSerializer):
 class UpdateExpLearningSerializer(serializers.ModelSerializer):
     judge = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
     poster_id = serializers.IntegerField()
-
+    student_department = serializers.CharField(source='student.department', read_only=True)
     class Meta:
         model = ExpLearning
         fields = ['poster_id', 'judge', 'student', 'reflection_score',
-                  'communication_score', 'presentation_score', 'feedback']
+                  'communication_score', 'presentation_score', 'feedback', 'student_department']
         # ✅ No `id` in this list

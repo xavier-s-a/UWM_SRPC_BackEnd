@@ -2,10 +2,10 @@ import pandas as pd
 import requests
 from datetime import datetime
 
-EXCEL_PATH = "/Users/xavier/Desktop/UWMSRPC/SRPCjudges26.xlsx"
+EXCEL_PATH = "/Users/xavier/Desktop/UWMSRPC/2026_Poster_Competition_Judge_List_for_SCORING.xlsx"
 API_URL = "http://127.0.0.1:8000/api/signup/"
-USE_PROD = False
-TOKEN = "token_here"  
+USE_PROD = True
+TOKEN = "token" # Replace with your actual token for production
 
 REGISTRATION_DEADLINE = datetime(2026, 4, 25, 11, 0)
 if datetime.now() >= REGISTRATION_DEADLINE:
@@ -35,22 +35,32 @@ if USE_PROD:
 
 
 for index, row in df.iterrows():
-    password = f"{row['Last Name'].strip().lower()}2025"
+    password = f"{row['Last Name'].strip().lower()}2026"
     email = row.get("email", "").strip().lower()
+    title = str(row.get("Title", "")).strip()
+    company = str(row.get("Organization", "")).strip()
+    if not title:
+        title = "Professional"
+    if not company:
+        company = "N/A"
     payload = {
         "first_name": row.get("First Name", ""),
         "last_name": row.get("Last Name", ""),
-        "title": row.get("Title", ""),
-        "company": row.get("Organization", ""),
+        "title": title,
+        "company": company,
         "alumni": bool(row.get("alumni", False)),
         "year": row.get("year", ""),
         "degree": row.get("degree", ""),
-        "email": row.get("email", ""),
+        "email": email,
         "password": password,
     }
 
     response = requests.post(API_URL, json=payload, headers=headers)
-    if response.status_code == 400 and "User already exists" in response.text:
+    if response.status_code in [400, 409] and (
+    "already exists" in response.text.lower()
+    or "unique" in response.text.lower()
+    or "email" in response.text.lower()
+                                                ):
         print(f"SKIPPED Row {index + 1}: {email} already exists.")
         continue
     if response.status_code != 201:

@@ -20,7 +20,8 @@ class Login(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         try:
-            email = request.data['email']
+            #email = request.data['email']
+            email = request.data.get('email', '').strip().lower()
             password = request.data['password']
         except:
             return Response({'error': 'Please provide both email and password'}, status=status.HTTP_400_BAD_REQUEST)
