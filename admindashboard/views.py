@@ -493,6 +493,7 @@ def judge_poster_status(request):
 
         result.append({
             "judge_first_name": judge.first_name or "",
+            "judge_last_name": judge.last_name or "",
             "judge_email": judge.email or "",
             "posters_scored": posts,
             "posters_scored_count": len(posts),
