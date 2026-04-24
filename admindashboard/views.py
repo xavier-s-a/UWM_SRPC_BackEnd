@@ -440,7 +440,15 @@ def judge_poster_status(request):
         poster_ID__lte=hi
     ).count()
 
-    judges = User.objects.exclude(email__isnull=True).exclude(email__exact="").order_by("first_name", "email")
+    judges = (
+    User.objects
+    .filter(groups__name="Judge")
+    .exclude(is_superuser=True)
+    .exclude(email__isnull=True)
+    .exclude(email__exact="")
+    .distinct()
+    .order_by("last_name", "first_name", "email")
+)
 
     result = []
     for judge in judges:
