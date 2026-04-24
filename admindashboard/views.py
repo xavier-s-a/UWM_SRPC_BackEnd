@@ -332,7 +332,18 @@ def category_aggregate_view(request):
     def format_rows(results):
         out = []
         for r in results:
-            advisor = (f'{r.get("adv_first","")} {r.get("adv_last","")}'.strip()) or "Unknown"
+            #advisor = (f'{r.get("adv_first","")} {r.get("adv_last","")}'.strip()) or "Unknown"
+            adv_first = (r.get("adv_first") or "").strip()
+            adv_last = (r.get("adv_last") or "").strip()
+
+            if adv_first and adv_last:
+                advisor = f"{adv_first} {adv_last}"
+            elif adv_first:
+                advisor = adv_first
+            elif adv_last:
+                advisor = adv_last
+            else:
+                advisor = "None"
             out.append({
                 "name": r.get("name") or "Unknown",
                 "poster_id": r.get("poster_num"),

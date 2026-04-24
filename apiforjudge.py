@@ -4,7 +4,7 @@ from datetime import datetime
 
 EXCEL_PATH = "/Users/xavier/Desktop/UWMSRPC/2026_Poster_Competition_Judge_List_for_SCORING.xlsx"
 API_URL = "http://127.0.0.1:8000/api/signup/"
-USE_PROD = True
+USE_PROD = False
 TOKEN = "token" # Replace with your actual token for production
 
 REGISTRATION_DEADLINE = datetime(2026, 4, 25, 11, 0)
@@ -35,7 +35,8 @@ if USE_PROD:
 
 
 for index, row in df.iterrows():
-    password = f"{row['Last Name'].strip().lower()}2026"
+    last_name_normalized = "".join(str(row["Last Name"]).strip().lower().split())
+    password = f"{last_name_normalized}2026"        
     email = row.get("email", "").strip().lower()
     title = str(row.get("Title", "")).strip()
     company = str(row.get("Organization", "")).strip()

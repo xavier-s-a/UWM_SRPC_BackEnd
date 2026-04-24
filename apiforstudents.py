@@ -11,10 +11,9 @@ if datetime.now() >= EVENT_DATETIME:
 
 EXCEL_PATH = "/Users/xavier/Desktop/UWMSRPC/2026rpc.xlsx"
 API_URL = "http://127.0.0.1:8000/api/home/students/create/"
-USE_PROD = True
+USE_PROD = False
 
-TOKEN = "tooekn" # Replace with your actual token for production
-
+TOKEN = "token" # Replace with your actual token for production
 import os
 import pandas as pd
 import requests
